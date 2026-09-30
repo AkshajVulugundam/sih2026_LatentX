@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated datasets
+*.csv
+
+# Generated reports / experiment outputs
+*_report.txt
+*_predictions.csv
+*_scores.csv
+risk_assessment.csv
+batch_stats.json
+dashboard_data_v2.json
+
+# Generated plots
+*.png
+*.jpg
+*.jpeg
+
+# Temporary / local files
+*.log
+.DS_Store
+Thumbs.db
+
+# Local IDE settings
+.vscode/
+.idea/
+
+# Large/local research data
+*.mat
+
+# Temporary build/output folders
+dist/
+build/
