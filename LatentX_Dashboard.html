@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LatentX — Component Reliability Screening</title>
+<style>
+:root{
+  --bg:#07111f; --bg2:#0b1729; --panel:#0f1d31; --panel2:#13243a; --line:#203650;
+  --text:#e8f0f8; --muted:#8ea4ba; --faint:#5e758d;
+  --cyan:#54d6d0; --blue:#6da7ff; --green:#5dd39e; --amber:#f3bf55; --red:#ff6b6b;
+  --radius:0px; --mono:Arial,sans-serif;
+  --sans:Arial,sans-serif;
+}
+*{box-sizing:border-box} body{margin:0;background:#0b1729;color:var(--text);font-family:Arial,sans-serif;min-height:100vh}
+button,input,select{font:inherit} button{cursor:pointer}
+.wrap{max-width:1440px;margin:0 auto;padding:28px 28px 64px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px} .brandmark{width:44px;height:44px;border-radius:0;display:grid;place-items:center;background:#0b1729;box-shadow:none}
+.brandmark svg{width:24px;height:24px} .eyebrow{font:11px Arial,sans-serif;letter-spacing:.12em;color:var(--cyan);text-transform:uppercase}
+h1{font-size:28px;line-height:1.05;margin:3px 0 0;letter-spacing:-.03em} .subtitle{margin-top:8px;color:var(--muted);font-size:13px;max-width:860px;line-height:1.5}
+.status-row{display:flex;gap:8px;flex-wrap:wrap} .status{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:0;padding:8px 11px;background:#0b1728aa;color:var(--muted);font:11px Arial,sans-serif}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--faint)} .status.ok .dot{background:var(--green);box-shadow:none} .status.warn .dot{background:var(--amber)} .status.bad .dot{background:var(--red)}
+.notice{border:1px solid #28435d;background:#0b1729;border-radius:0;padding:12px 14px;color:#b7c9dc;font-size:12px;line-height:1.55;margin-bottom:22px}
+.layout{display:grid;grid-template-columns:390px minmax(0,1fr);gap:18px;align-items:start} .card{background:#0b1729;border:1px solid var(--line);border-radius:0;box-shadow:none}
+.card-h{padding:18px 18px 13px;border-bottom:1px solid var(--line)} .card-h h2{font-size:14px;margin:0;letter-spacing:.01em} .card-h p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.45}
+.card-b{padding:18px}
+.seg{display:flex;gap:7px;background:#091526;border:1px solid var(--line);border-radius:0;padding:5px;margin-bottom:16px} .seg button{flex:1;border:0;border-radius:0;padding:10px 11px;background:transparent;color:var(--muted);font:11px Arial,sans-serif} .seg button.active{background:#173150;color:var(--text);box-shadow:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px} .field{margin-bottom:11px} .field label{display:block;color:var(--muted);font:10px Arial,sans-serif;letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase} .field input,.field select{width:100%;border:1px solid var(--line);background:#091727;color:var(--text);border-radius:0;padding:11px 12px;outline:none} .field input:focus,.field select:focus{border-color:#3e78a2;box-shadow:none}
+.measure{border:1px solid var(--line);border-radius:0;overflow:hidden;margin-top:4px} .mrow{display:grid;grid-template-columns:55px 1fr 1fr 1fr;gap:0;border-top:1px solid var(--line)} .mrow:first-child{border-top:0} .mcell{padding:9px 8px} .mhead{background:#13243a;color:var(--muted);font:9px Arial,sans-serif;text-transform:uppercase} .mtime{font:11px Arial,sans-serif;color:var(--cyan);align-self:center} .mcell input{width:100%;padding:9px 8px;border:1px solid #203650;border-radius:0;background:#091727;color:var(--text);min-width:0}
+.mrow.disabled{opacity:.35} .help{font-size:10px;line-height:1.45;color:var(--faint);margin-top:7px}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap} .btn{border:1px solid #2f4e6c;background:#132a46;color:var(--text);border-radius:0;padding:10px 13px;font:11px Arial,sans-serif} .btn.primary{background:#0b1729;border-color:#2b8989;color:#ecffff;box-shadow:none} .btn.ghost{background:transparent} .btn:hover{filter:brightness(1.08)}
+.presets{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px} .preset{padding:7px 9px;border-radius:0;border:1px solid var(--line);background:#0b1828;color:var(--muted);font:10px Arial,sans-serif}
+.right{display:grid;gap:18px} .hero{display:grid;grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(140px,.8fr));gap:12px;padding:16px} .hero-main{padding:18px;border:1px solid var(--line);border-radius:0;background:#0b1729;font:10px Arial,sans-serif;letter-spacing:.08em} .risk{font-size:34px;line-height:1;margin-top:8px;font-weight:750;letter-spacing:-.04em} .risk.NORMAL{color:var(--green)} .risk.MONITOR{color:var(--amber)} .risk.HIGH_RISK{color:var(--red)} .risk-sub{margin-top:8px;color:var(--muted);font-size:11px}
+.kpi{border:1px solid var(--line);border-radius:0;padding:16px;background:#0b1829} .kpi .k{color:var(--muted);font:9px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase} .kpi .v{font:700 24px Arial,sans-serif;margin-top:10px} .kpi .s{color:var(--faint);font-size:10px;margin-top:5px}
+.probs{display:grid;gap:8px;margin-top:14px} .prob{display:grid;grid-template-columns:80px 1fr 46px;align-items:center;gap:8px} .prob label{font:10px Arial,sans-serif;color:var(--muted)} .bar{height:7px;background:#071321;border-radius:0;overflow:hidden;border:1px solid #19304a} .fill{height:100%;border-radius:0} .pnum{font:10px Arial,sans-serif;text-align:right;color:var(--text)}
+.sections{display:grid;grid-template-columns:1fr 1fr;gap:18px} .section-title{font:11px Arial,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px}
+.signal{display:grid;grid-template-columns:1fr 1fr;gap:10px} .signal-box{border:1px solid var(--line);border-radius:0;padding:14px;background:#0b1829} .signal-box .big{font:700 22px Arial,sans-serif} .signal-box .small{color:var(--muted);font-size:10px;margin-top:5px;line-height:1.45} .driver{margin-top:8px;padding:8px 9px;border:1px solid #28435d;border-radius:0;background:#0d2138;color:#b7cadc;font:10px Arial,sans-serif;word-break:break-word}
+.path{display:grid;gap:7px} .step{display:grid;grid-template-columns:24px 1fr;gap:9px;align-items:start;border:1px solid var(--line);border-radius:0;padding:9px 10px;background:#0b1829} .stepno{width:22px;height:22px;border-radius:0;display:grid;place-items:center;background:#143457;color:var(--cyan);font:10px Arial,sans-serif} .steptext{font:10.5px Arial,sans-serif;line-height:1.45;color:#d7e3ef} .steptext b{color:var(--cyan);font-weight:600}
+.params{display:grid;grid-template-columns:repeat(3,1fr);gap:10px} .pcard{border:1px solid var(--line);border-radius:0;padding:14px;background:#0b1829} .ptop{display:flex;justify-content:space-between;gap:8px;align-items:center} .pname{font-size:12px;font-weight:650} .tag{font:9px Arial,sans-serif;padding:5px 7px;border-radius:0;border:1px solid var(--line);color:var(--muted)} .tag.below{color:var(--green);border-color:#2d6d58} .tag.near{color:var(--amber);border-color:#6b5b2d} .tag.over{color:var(--red);border-color:#773d45} .vals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px} .val .k{color:var(--muted);font:9px Arial,sans-serif} .val .v{font:700 17px Arial,sans-serif;margin-top:4px} .meter2{height:8px;background:#071321;border-radius:0;overflow:hidden;margin-top:10px;border:1px solid #19304a} .meter2>div{height:100%;border-radius:0}
+.chart-wrap{padding:14px;border:1px solid var(--line);border-radius:0;background:#0b1829} .chart-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px} .chart-legend{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font:9px Arial,sans-serif} .legend{display:inline-flex;align-items:center;gap:5px} .legend i{width:12px;height:3px;border-radius:0;background:var(--text);display:block} .legend i.limit{background:var(--red)} .legend i.pred{background:var(--blue);border-top:1px dashed var(--blue)} svg.chart{width:100%;height:245px;display:block}
+.validation{display:grid;grid-template-columns:repeat(4,1fr);gap:10px} .vcard{border:1px solid var(--line);border-radius:0;padding:13px;background:#0b1829} .vcard .k{font:9px Arial,sans-serif;color:var(--muted)} .vcard .v{font:700 22px Arial,sans-serif;margin-top:6px} .vcard .s{font-size:10px;color:var(--faint);margin-top:4px;line-height:1.45}
+.arch{display:grid;grid-template-columns:repeat(4,1fr);gap:8px} .node{padding:12px;border:1px solid var(--line);background:#0b1829;border-radius:0;text-align:center} .node .n{font:11px Arial,sans-serif;color:var(--text)} .node .d{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.4}
+.empty{padding:28px 18px;color:var(--muted);text-align:center;font-size:12px;line-height:1.6} .foot{color:var(--faint);font-size:10px;line-height:1.6;margin-top:18px} .foot b{color:#8faac4}
+@media(max-width:1120px){.layout{grid-template-columns:1fr}.hero{grid-template-columns:1.3fr repeat(3,1fr)}}
+@media(max-width:760px){.wrap{padding:18px 14px 46px}.hero,.sections,.params,.validation,.arch{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.mrow{grid-template-columns:45px repeat(3,1fr)}.hero-main{min-height:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brandmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 16.5 10 12l3 2 5-7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19.5h16" stroke="#7DECE5" stroke-width="1.3"/></svg></div>
+      <div><div class="eyebrow">LATENTX · COMPONENT RELIABILITY</div><h1>LatentX screening console</h1><div class="subtitle">AI-driven component burn-in screening · anomaly detection → risk classification → 168h degradation forecast.</div></div>
+    </div>
+    <div class="status-row">
+      <div id="modelStatus" class="status warn"><span class="dot"></span><span>model loading…</span></div>
+      <div class="status ok"><span class="dot"></span><span>offline inference</span></div>
+      <div class="status"><span class="dot"></span><span>synthetic prototype</span></div>
+    </div>
+  </div>
+
+  <div class="notice"><b>Prototype boundary:</b> the current model bundle and batch profiles are trained/calibrated from the SIH-style synthetic dataset used in this project. They are not ISRO measurements, and the numerical limits below are prototype assumptions used by the supplied training pipeline.</div>
+
+  <div class="layout">
+    <section class="card">
+      <div class="card-h"><h2>Live screening input</h2><p>Choose the reference batch profile used to compute robust batch-relative z-scores, then enter the readings available at the selected cutoff.</p></div>
+      <div class="card-b">
+        <div class="seg" id="cutoffSeg">
+          <button data-cutoff="24">0h + 24h</button><button data-cutoff="96" class="active">0h + 24h + 96h</button>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Reference batch</label><select id="batch"></select></div>
+          <div class="field"><label>Component label</label><input id="component" value="DEMO-001" /></div>
+        </div>
+
+        <div class="measure">
+          <div class="mrow">
+            <div class="mcell mhead">time</div><div class="mcell mhead">Iddq · mA</div><div class="mcell mhead">Leakage · µA</div><div class="mcell mhead">Delay · ns</div>
+          </div>
+          <div class="mrow"><div class="mcell mtime">0h</div><div class="mcell"><input id="Iddq_0" inputmode="decimal"></div><div class="mcell"><input id="Leakage_0" inputmode="decimal"></div><div class="mcell"><input id="Delay_0" inputmode="decimal"></div></div>
+          <div class="mrow"><div class="mcell mtime">24h</div><div class="mcell"><input id="Iddq_24" inputmode="decimal"></div><div class="mcell"><input id="Leakage_24" inputmode="decimal"></div><div class="mcell"><input id="Delay_24" inputmode="decimal"></div></div>
+          <div class="mrow" id="row96"><div class="mcell mtime">96h</div><div class="mcell"><input id="Iddq_96" inputmode="decimal"></div><div class="mcell"><input id="Leakage_96" inputmode="decimal"></div><div class="mcell"><input id="Delay_96" inputmode="decimal"></div></div>
+        </div>
+        <div class="help">The live feature builder uses only readings at or before the chosen cutoff. 168h is never a live input; it is the forecast target.</div>
+        <div class="actions"><button class="btn primary" id="run">Run screening</button><button class="btn ghost" id="clear">Clear</button></div>
+        <div class="section-title" style="margin-top:18px">quick demo presets</div>
+        <div class="presets"><button class="preset" data-preset="normal">typical / low drift</button><button class="preset" data-preset="monitor">early monitor</button><button class="preset" data-preset="high">escalating</button></div>
+      </div>
+    </section>
+
+    <main class="right">
+      <section class="card hero" id="hero">
+        <div class="hero-main"><div class="hero-k">SCREENING RESULT</div><div class="risk" id="riskText">—</div><div class="risk-sub" id="riskSub">Enter readings and run the model.</div><div class="probs" id="probs"></div></div>
+        <div class="kpi"><div class="k">Stage 1 max |z|</div><div class="v" id="kMaxZ">—</div><div class="s" id="kDriver">batch signal</div></div>
+        <div class="kpi"><div class="k">Tree leaf confidence</div><div class="v" id="kConf">—</div><div class="s">trained depth-5 tree</div></div>
+        <div class="kpi"><div class="k">Highest 168h load</div><div class="v" id="kWorst">—</div><div class="s" id="kWorstSub">point forecast</div></div>
+      </section>
+
+      <div class="sections">
+        <section class="card"><div class="card-b"><div class="section-title">Stage 1 · batch-relative signal</div><div class="signal"><div class="signal-box"><div class="big" id="s1Flag">—</div><div class="small">robust-z rule, threshold |z| &gt; 3.5</div></div><div class="signal-box"><div class="big" id="s1Driver">—</div><div class="small">feature with the largest absolute z-score</div></div></div><div class="driver" id="driverDetail">No screening run yet.</div></div></section>
+        <section class="card"><div class="card-b"><div class="section-title">Risk probabilities</div><div id="probExplain" class="empty" style="padding:8px 0">The leaf distribution from the deployed tree appears here after screening.</div></div></section>
+      </div>
+
+      <section class="card"><div class="card-b"><div class="section-title">Stage 2 · exact decision path</div><div class="path" id="path"><div class="empty">The trained tree path will appear here.</div></div></div></section>
+
+      <section class="card"><div class="card-h"><h2>168h point forecast</h2><p>Stage 3 uses the cutoff's deployed regressors. Forecasts are point estimates, not prediction intervals.</p></div><div class="card-b"><div class="params" id="params"><div class="empty" style="grid-column:1/-1">Run a screening to see projected values.</div></div></div></section>
+
+      <section class="card"><div class="card-b"><div class="chart-toolbar"><div class="section-title" style="margin:0">Measurement trajectory</div><div class="chart-legend"><span class="legend"><i></i>measured</span><span class="legend"><i class="pred"></i>predicted 168h</span><span class="legend"><i class="limit"></i>limit</span></div></div><div class="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 760 245" preserveAspectRatio="none"></svg></div></div></section>
+
+      <section class="card"><div class="card-h"><h2>Prototype validation snapshot</h2><p>Reported metrics from the supplied training/export report; shown as context, not as a guarantee for future ISRO data.</p></div><div class="card-b"><div class="validation" id="validation"></div></div></section>
+
+      <section class="card"><div class="card-b"><div class="section-title">System flow</div><div class="arch"><div class="node"><div class="n">INPUT</div><div class="d">0h / 24h / optional 96h readings</div></div><div class="node"><div class="n">STAGE 1</div><div class="d">batch-relative robust z + driver</div></div><div class="node"><div class="n">STAGE 2</div><div class="d">trained depth-5 risk classifier</div></div><div class="node"><div class="n">STAGE 3</div><div class="d">target-specific 168h regressors</div></div></div></div></section>
+
+      <div class="foot"><b>Implementation note:</b> 24h deployment uses the ablation-selected Stage-2 feature set without chained anomaly_* inputs; 96h deployment includes them. Stage 3 chains the deployed Stage-2 class probabilities into its forecast features for both cutoffs. The browser executes the exported model payload from <span style="font-family:var(--mono)">reliefos_live_models.js</span>.</div>
+    </main>
+  </div>
+</div>
+
+<script src="reliefos_live_models.js"></script>
+<script>
+const BATCH_STATS = {"B01":{"levels":{"Iddq_mA":{"0":{"median":1.9968,"mad_sigma":0.1437},"24":{"median":2.1086,"mad_sigma":0.1377},"96":{"median":2.4125,"mad_sigma":0.1546}},"Leakage_uA":{"0":{"median":63.8744,"mad_sigma":3.2912},"24":{"median":66.1832,"mad_sigma":3.1874},"96":{"median":72.7496,"mad_sigma":4.6988}},"Propagation_Delay_ns":{"0":{"median":8.0928,"mad_sigma":0.1655},"24":{"median":8.2148,"mad_sigma":0.1616},"96":{"median":8.5505,"mad_sigma":0.1292}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.1044,"mad_sigma":0.0406},"24_96":{"median":0.2957,"mad_sigma":0.0512}},"Leakage_uA":{"0_24":{"median":2.5232,"mad_sigma":1.2663},"24_96":{"median":6.8956,"mad_sigma":2.2057}},"Propagation_Delay_ns":{"0_24":{"median":0.1213,"mad_sigma":0.0633},"24_96":{"median":0.326,"mad_sigma":0.0843}}}},"B02":{"levels":{"Iddq_mA":{"0":{"median":2.1164,"mad_sigma":0.1155},"24":{"median":2.2395,"mad_sigma":0.1066},"96":{"median":2.5337,"mad_sigma":0.1422}},"Leakage_uA":{"0":{"median":58.6955,"mad_sigma":4.5506},"24":{"median":60.9468,"mad_sigma":3.2412},"96":{"median":67.567,"mad_sigma":3.8303}},"Propagation_Delay_ns":{"0":{"median":8.0705,"mad_sigma":0.1264},"24":{"median":8.2049,"mad_sigma":0.1406},"96":{"median":8.5323,"mad_sigma":0.1754}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.0932,"mad_sigma":0.0409},"24_96":{"median":0.2982,"mad_sigma":0.0448}},"Leakage_uA":{"0_24":{"median":1.9261,"mad_sigma":1.8557},"24_96":{"median":7.2866,"mad_sigma":2.0568}},"Propagation_Delay_ns":{"0_24":{"median":0.1023,"mad_sigma":0.0511},"24_96":{"median":0.3262,"mad_sigma":0.0767}}}},"B03":{"levels":{"Iddq_mA":{"0":{"median":2.1059,"mad_sigma":0.1133},"24":{"median":2.2136,"mad_sigma":0.1645},"96":{"median":2.5149,"mad_sigma":0.1707}},"Leakage_uA":{"0":{"median":57.0302,"mad_sigma":3.0633},"24":{"median":60.1102,"mad_sigma":3.0578},"96":{"median":67.0998,"mad_sigma":4.5043}},"Propagation_Delay_ns":{"0":{"median":8.2349,"mad_sigma":0.1341},"24":{"median":8.364,"mad_sigma":0.1055},"96":{"median":8.6971,"mad_sigma":0.1924}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.1001,"mad_sigma":0.0388},"24_96":{"median":0.3173,"mad_sigma":0.0747}},"Leakage_uA":{"0_24":{"median":2.5305,"mad_sigma":1.9522},"24_96":{"median":6.7954,"mad_sigma":1.6589}},"Propagation_Delay_ns":{"0_24":{"median":0.1074,"mad_sigma":0.0758},"24_96":{"median":0.3252,"mad_sigma":0.0672}}}},"B04":{"levels":{"Iddq_mA":{"0":{"median":2.1149,"mad_sigma":0.1188},"24":{"median":2.2516,"mad_sigma":0.1212},"96":{"median":2.5781,"mad_sigma":0.1212}},"Leakage_uA":{"0":{"median":58.6284,"mad_sigma":3.7435},"24":{"median":60.7415,"mad_sigma":3.7391},"96":{"median":68.0708,"mad_sigma":3.8537}},"Propagation_Delay_ns":{"0":{"median":8.1502,"mad_sigma":0.1013},"24":{"median":8.2565,"mad_sigma":0.1097},"96":{"median":8.5709,"mad_sigma":0.1557}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.1112,"mad_sigma":0.0333},"24_96":{"median":0.3085,"mad_sigma":0.0653}},"Leakage_uA":{"0_24":{"median":2.4703,"mad_sigma":1.892},"24_96":{"median":7.3797,"mad_sigma":1.8484}},"Propagation_Delay_ns":{"0_24":{"median":0.1162,"mad_sigma":0.0571},"24_96":{"median":0.3315,"mad_sigma":0.066}}}},"B05":{"levels":{"Iddq_mA":{"0":{"median":1.9294,"mad_sigma":0.107},"24":{"median":2.032,"mad_sigma":0.0974},"96":{"median":2.3031,"mad_sigma":0.1088}},"Leakage_uA":{"0":{"median":58.0319,"mad_sigma":4.3486},"24":{"median":60.443,"mad_sigma":4.6337},"96":{"median":66.6903,"mad_sigma":3.8162}},"Propagation_Delay_ns":{"0":{"median":8.0729,"mad_sigma":0.1474},"24":{"median":8.227,"mad_sigma":0.1528},"96":{"median":8.5178,"mad_sigma":0.1684}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.1064,"mad_sigma":0.0386},"24_96":{"median":0.2918,"mad_sigma":0.0695}},"Leakage_uA":{"0_24":{"median":2.5981,"mad_sigma":1.9376},"24_96":{"median":6.6194,"mad_sigma":2.6459}},"Propagation_Delay_ns":{"0_24":{"median":0.1039,"mad_sigma":0.0591},"24_96":{"median":0.34,"mad_sigma":0.071}}}},"B06":{"levels":{"Iddq_mA":{"0":{"median":2.0545,"mad_sigma":0.1193},"24":{"median":2.1558,"mad_sigma":0.1312},"96":{"median":2.4697,"mad_sigma":0.1522}},"Leakage_uA":{"0":{"median":61.2904,"mad_sigma":4.1282},"24":{"median":64.3498,"mad_sigma":4.4618},"96":{"median":70.9414,"mad_sigma":4.6275}},"Propagation_Delay_ns":{"0":{"median":7.727,"mad_sigma":0.1258},"24":{"median":7.8513,"mad_sigma":0.1338},"96":{"median":8.2138,"mad_sigma":0.1576}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.1029,"mad_sigma":0.0276},"24_96":{"median":0.3024,"mad_sigma":0.0485}},"Leakage_uA":{"0_24":{"median":2.4506,"mad_sigma":1.8219},"24_96":{"median":6.5754,"mad_sigma":2.6241}},"Propagation_Delay_ns":{"0_24":{"median":0.1049,"mad_sigma":0.053},"24_96":{"median":0.3395,"mad_sigma":0.0475}}}},"B07":{"levels":{"Iddq_mA":{"0":{"median":2.0193,"mad_sigma":0.125},"24":{"median":2.1491,"mad_sigma":0.1344},"96":{"median":2.4384,"mad_sigma":0.2082}},"Leakage_uA":{"0":{"median":62.8003,"mad_sigma":3.3595},"24":{"median":65.2075,"mad_sigma":3.6218},"96":{"median":72.4888,"mad_sigma":4.5301}},"Propagation_Delay_ns":{"0":{"median":8.1495,"mad_sigma":0.1144},"24":{"median":8.2764,"mad_sigma":0.1585},"96":{"median":8.6201,"mad_sigma":0.2045}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.109,"mad_sigma":0.041},"24_96":{"median":0.2806,"mad_sigma":0.0518}},"Leakage_uA":{"0_24":{"median":2.0925,"mad_sigma":1.785},"24_96":{"median":6.8182,"mad_sigma":2.1155}},"Propagation_Delay_ns":{"0_24":{"median":0.1165,"mad_sigma":0.0458},"24_96":{"median":0.3372,"mad_sigma":0.0597}}}},"B08":{"levels":{"Iddq_mA":{"0":{"median":1.9563,"mad_sigma":0.0819},"24":{"median":2.0795,"mad_sigma":0.1168},"96":{"median":2.3785,"mad_sigma":0.1619}},"Leakage_uA":{"0":{"median":55.1684,"mad_sigma":3.4058},"24":{"median":57.7116,"mad_sigma":4.1903},"96":{"median":65.1671,"mad_sigma":5.3394}},"Propagation_Delay_ns":{"0":{"median":7.8461,"mad_sigma":0.1312},"24":{"median":7.9677,"mad_sigma":0.1279},"96":{"median":8.3106,"mad_sigma":0.1979}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.1133,"mad_sigma":0.0493},"24_96":{"median":0.3218,"mad_sigma":0.0837}},"Leakage_uA":{"0_24":{"median":2.9031,"mad_sigma":2.0994},"24_96":{"median":7.0622,"mad_sigma":2.6459}},"Propagation_Delay_ns":{"0_24":{"median":0.1231,"mad_sigma":0.0657},"24_96":{"median":0.3269,"mad_sigma":0.0897}}}},"B09":{"levels":{"Iddq_mA":{"0":{"median":1.9586,"mad_sigma":0.1252},"24":{"median":2.0664,"mad_sigma":0.1198},"96":{"median":2.3774,"mad_sigma":0.1602}},"Leakage_uA":{"0":{"median":61.1837,"mad_sigma":4.0315},"24":{"median":64.4654,"mad_sigma":4.5203},"96":{"median":70.2171,"mad_sigma":5.608}},"Propagation_Delay_ns":{"0":{"median":8.0657,"mad_sigma":0.1383},"24":{"median":8.1801,"mad_sigma":0.1211},"96":{"median":8.5196,"mad_sigma":0.1816}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.1085,"mad_sigma":0.0494},"24_96":{"median":0.2953,"mad_sigma":0.0634}},"Leakage_uA":{"0_24":{"median":2.2205,"mad_sigma":1.5602},"24_96":{"median":6.8918,"mad_sigma":2.3434}},"Propagation_Delay_ns":{"0_24":{"median":0.1175,"mad_sigma":0.0682},"24_96":{"median":0.3181,"mad_sigma":0.0738}}}},"B10":{"levels":{"Iddq_mA":{"0":{"median":1.9163,"mad_sigma":0.1075},"24":{"median":2.0277,"mad_sigma":0.1262},"96":{"median":2.3217,"mad_sigma":0.145}},"Leakage_uA":{"0":{"median":59.4162,"mad_sigma":2.8739},"24":{"median":61.9604,"mad_sigma":3.3045},"96":{"median":68.9848,"mad_sigma":3.5582}},"Propagation_Delay_ns":{"0":{"median":8.1917,"mad_sigma":0.1479},"24":{"median":8.2875,"mad_sigma":0.1558},"96":{"median":8.6314,"mad_sigma":0.1175}}},"deltas":{"Iddq_mA":{"0_24":{"median":0.1035,"mad_sigma":0.0389},"24_96":{"median":0.2872,"mad_sigma":0.0536}},"Leakage_uA":{"0_24":{"median":2.5298,"mad_sigma":2.0852},"24_96":{"median":6.9804,"mad_sigma":2.6594}},"Propagation_Delay_ns":{"0_24":{"median":0.1129,"mad_sigma":0.0729},"24_96":{"median":0.324,"mad_sigma":0.0553}}}}};
+const LIMITS = {Iddq_mA:5.0, Leakage_uA:200.0, Propagation_Delay_ns:15.0};
+const PARAMS = [
+  {key:'Iddq_mA', input:'Iddq', label:'Iddq', unit:'mA'},
+  {key:'Leakage_uA', input:'Leakage', label:'Leakage', unit:'µA'},
+  {key:'Propagation_Delay_ns', input:'Delay', label:'Propagation delay', unit:'ns'}
+];
+const PRESETS = {
+  normal: {component:'DEMO-NORMAL',batch:'B01',vals:{Iddq:[2.05461,2.19184,2.49215],Leakage:[59.3978,58.79566,67.05729],Delay:[8.31312,8.36136,8.70321]}},
+  monitor: {component:'DEMO-MONITOR',batch:'B01',vals:{Iddq:[1.87236,1.93522,2.17724],Leakage:[54.69045,58.64971,64.06673],Delay:[8.1474,8.25007,8.51821]}},
+  high: {component:'DEMO-HIGH',batch:'B01',vals:{Iddq:[1.97382,2.41723,3.32928],Leakage:[59.61422,66.20872,86.22133],Delay:[8.04124,8.54487,9.56295]}}
+};
+const VALIDATION = {
+  '24h classifier': ['86.8%','macro-F1 0.716'],
+  '96h classifier': ['90.8%','macro-F1 0.805'],
+  '96h Iddq': ['MAE 0.072','R² 0.945'],
+  '96h Leakage': ['MAE 3.301','R² 0.886']
+};
+let cutoff=96;
+let last=null;
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function robustZ(v, st){ return (v-st.median)/(st.mad_sigma||1e-9); }
+function getValues(){
+  const out={};
+  for(const p of PARAMS){ out[p.key]={}; for(const t of [0,24,96]){ const el=document.getElementById(p.input+'_'+t); out[p.key][t]=Number(el.value); } }
+  const times=cutoff===24?[0,24]:[0,24,96];
+  for(const p of PARAMS) for(const t of times) if(!Number.isFinite(out[p.key][t])) throw new Error('Please fill every required reading.');
+  return out;
+}
+function buildFeatures(values){
+  const batch=document.getElementById('batch').value; const stats=BATCH_STATS[batch];
+  if(!stats) throw new Error('No batch profile available for '+batch+'.');
+  const times=cutoff===24?[0,24]:[0,24,96]; const X={};
+  for(const p of PARAMS){
+    for(const t of times){ const v=values[p.key][t]; X[p.key+'_'+t+'h']=v; X[p.key+'_'+t+'h_z']=robustZ(v,stats.levels[p.key][String(t)]); }
+    for(let i=0;i<times.length-1;i++){ const a=times[i], b=times[i+1], d=values[p.key][b]-values[p.key][a], dk=p.key+'_d'+a+'_'+b; X[dk]=d; X[dk+'_z']=robustZ(d,stats.deltas[p.key][a+'_'+b]); }
+  }
+  const zcols=Object.keys(X).filter(k=>k.endsWith('_z')); let maxZ=-Infinity, driver='';
+  for(const k of zcols){const az=Math.abs(X[k]); if(az>maxZ){maxZ=az;driver=k;}}
+  X.anomaly_maxZ=maxZ; X.anomaly_flag=maxZ>3.5?1:0;
+  for(const p of PARAMS) X['anomaly_driver_'+p.key]=driver.startsWith(p.key)?1:0;
+  return {X,maxZ,driver,times};
+}
+function classifyLive(X){
+  if(!window.RELIEFOS_LIVE_MODELS?.stage2) throw new Error('Model bundle is not loaded. Keep reliefos_live_models.js beside this HTML file.');
+  const m=window.RELIEFOS_LIVE_MODELS.stage2[String(cutoff)]; const names=m.deployed_feature_names; const t=m.tree; let node=0; const path=[];
+  while(t.children_left[node]!==-1){
+    const fi=t.feature[node], name=names[fi], thr=t.threshold[node], value=Number(X[name]);
+    const right=value>thr; path.push({name,value,thr,right}); node=right?t.children_right[node]:t.children_left[node];
+  }
+  const probs=t.probs[node]; let best=0; for(let i=1;i<probs.length;i++) if(probs[i]>probs[best]) best=i;
+  const proba={}; t.classes.forEach((c,i)=>proba[c]=probs[i]);
+  return {level:t.classes[best],confidence:probs[best],proba,path};
+}
+function predict168(X){
+  if(!(window.RELIEFOS_STAGE3_READY && typeof window.reliefosPredict168h==='function')) throw new Error('Stage 3 model functions are not available.');
+  return window.reliefosPredict168h(cutoff,X);
+}
+function niceDriver(s){
+  return s.replace('_d0_24_z',' · 0→24h drift').replace('_d24_96_z',' · 24→96h drift').replace('_0h_z',' · 0h level').replace('_24h_z',' · 24h level').replace('_96h_z',' · 96h level').replace('Iddq_mA','Iddq').replace('Leakage_uA','Leakage').replace('Propagation_Delay_ns','Propagation delay');
+}
+function fnum(v){return Number(v).toFixed(3)}
+function colorFor(level){return level==='HIGH_RISK'?'var(--red)':level==='MONITOR'?'var(--amber)':'var(--green)'}
+function renderResult(built,risk,preds){
+  document.getElementById('riskText').textContent=risk.level.replace('_',' '); document.getElementById('riskText').className='risk '+risk.level;
+  document.getElementById('riskSub').textContent=document.getElementById('component').value.trim()+' · '+cutoff+'h cutoff';
+  document.getElementById('kMaxZ').textContent=built.maxZ.toFixed(2);
+  document.getElementById('kDriver').textContent=niceDriver(built.driver);
+  document.getElementById('kConf').textContent=(risk.confidence*100).toFixed(0)+'%';
+  let worstP=null,worstPct=-Infinity; for(const p of PARAMS){const pct=100*preds[p.key]/LIMITS[p.key]; if(pct>worstPct){worstPct=pct;worstP=p;}}
+  document.getElementById('kWorst').textContent=worstPct.toFixed(1)+'%'; document.getElementById('kWorstSub').textContent=worstP.label+' of limit';
+  const probs=document.getElementById('probs'); probs.innerHTML=''; ['NORMAL','MONITOR','HIGH_RISK'].forEach(k=>{const pct=100*(risk.proba[k]||0); const row=document.createElement('div');row.className='prob';row.innerHTML='<label>'+k.replace('_',' ')+'</label><div class="bar"><div class="fill" style="width:'+pct+'%;background:'+colorFor(k)+'"></div></div><div class="pnum">'+pct.toFixed(1)+'%</div>';probs.appendChild(row)});
+  document.getElementById('probExplain').innerHTML='<div style="color:#a8bbce;font-size:11px;line-height:1.6">These are the leaf class probabilities stored with the exported depth-5 decision tree. They are model scores, not calibrated real-world failure probabilities.</div>';
+  const flagged=built.maxZ>3.5; document.getElementById('s1Flag').textContent=flagged?'FLAGGED':'clear'; document.getElementById('s1Flag').style.color=flagged?'var(--amber)':'var(--green)'; document.getElementById('s1Driver').textContent=niceDriver(built.driver).split(' · ')[0]; document.getElementById('driverDetail').textContent=niceDriver(built.driver)+' · robust z = '+built.X[built.driver].toFixed(2)+' · max |z| = '+built.maxZ.toFixed(2);
+  const path=document.getElementById('path'); path.innerHTML=risk.path.length?risk.path.map((s,i)=>'<div class="step"><div class="stepno">'+(i+1)+'</div><div class="steptext"><b>'+esc(s.name)+'</b> = '+s.value.toFixed(4)+' &nbsp; '+(s.right?'>':'≤')+' &nbsp; '+s.thr.toFixed(4)+'</div></div>').join(''):'<div class="empty">Root leaf — no split required.</div>';
+  const params=document.getElementById('params'); params.innerHTML=PARAMS.map(p=>{const pred=preds[p.key],lim=LIMITS[p.key],pct=100*pred/lim; const status=pct>=100?'over':pct>=85?'near':'below'; const st=status==='over'?'LIMIT EXCEEDED':status==='near'?'NEAR LIMIT':'BELOW LIMIT'; const now=built.X[p.key+'_'+(cutoff===24?24:96)+'h']; return '<div class="pcard"><div class="ptop"><div class="pname">'+p.label+'</div><div class="tag '+status+'">'+st+'</div></div><div class="vals"><div class="val"><div class="k">CURRENT @ '+cutoff+'h</div><div class="v">'+now.toFixed(3)+' '+p.unit+'</div></div><div class="val"><div class="k">PREDICTED @ 168h</div><div class="v">'+pred.toFixed(3)+' '+p.unit+'</div></div></div><div class="meter2"><div style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+colorFor(status==='over'?'HIGH_RISK':status==='near'?'MONITOR':'NORMAL')+'"></div></div><div class="small" style="margin-top:7px;color:var(--muted);font:10px Arial,sans-serif">'+pct.toFixed(1)+'% of prototype limit '+lim+'</div></div>'}).join('');
+  drawChart(built,preds);
+  last={cutoff,batch:document.getElementById('batch').value,component:document.getElementById('component').value.trim(),values:getValues(),built,risk,preds};
+}
+function drawChart(built,preds){
+  const svg=document.getElementById('chart'),W=760,H=245,L=46,R=16,T=14,B=35, iw=W-L-R, ih=H-T-B; const times=cutoff===24?[0,24,168]:[0,24,96,168]; let yMax=0; for(const p of PARAMS) yMax=Math.max(yMax, LIMITS[p.key], ...times.filter(t=>t!==168).map(t=>Number(built.X[p.key+'_'+t+'h']||0)), preds[p.key]); yMax*=1.08; const x=t=>L+iw*(t/168); const y=v=>T+ih*(1-v/yMax);
+  let out='<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="#203650"/><line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(H-B)+'" stroke="#203650"/>';
+  [0,24,96,168].filter(t=>cutoff===96||t!==96).forEach(t=>out+='<text x="'+x(t)+'" y="'+(H-13)+'" text-anchor="middle" fill="#6f879e" font-size="9" font-family="'+getComputedStyle(document.body).fontFamily+'">'+t+'h</text>');
+  const cols=[['Iddq_mA','#54d6d0'],['Leakage_uA','#6da7ff'],['Propagation_Delay_ns','#f3bf55']];
+  for(const [key,col] of cols){const p=PARAMS.find(q=>q.key===key); const lim=LIMITS[key]; const ly=y(lim); out+='<line x1="'+L+'" y1="'+ly+'" x2="'+(W-R)+'" y2="'+ly+'" stroke="#ff6b6b" stroke-width="1" stroke-dasharray="4 4" opacity=".55"/>';
+    const actualTimes=cutoff===24?[0,24]:[0,24,96]; const points=actualTimes.map(t=>[x(t),y(built.X[key+'_'+t+'h'])]); const predX=x(168), predY=y(preds[key]);
+    out+='<text x="'+(W-R)+'" y="'+(ly-4)+'" text-anchor="end" fill="#a37a7f" font-size="8" font-family="'+getComputedStyle(document.body).fontFamily+'">limit '+lim+'</text>';
+    if(points.length>1) out+='<polyline fill="none" stroke="'+col+'" stroke-width="2.2" points="'+points.map(q=>q.join(',')).join(' ')+'"/>'; points.forEach(q=>out+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="4" fill="#0b1829" stroke="'+col+'" stroke-width="2"/>');
+    const lastP=points[points.length-1]; out+='<line x1="'+lastP[0]+'" y1="'+lastP[1]+'" x2="'+predX+'" y2="'+predY+'" stroke="'+col+'" stroke-width="1.5" stroke-dasharray="5 4" opacity=".8"/><circle cx="'+predX+'" cy="'+predY+'" r="4.5" fill="'+col+'" stroke="#07111f" stroke-width="2"/>';
+  } svg.innerHTML=out;
+}
+function applyPreset(name){const p=PRESETS[name]; cutoff=96; document.querySelectorAll('#cutoffSeg button').forEach(b=>b.classList.toggle('active',Number(b.dataset.cutoff)===96)); document.getElementById('batch').value=p.batch; document.getElementById('component').value=p.component; for(const par of ['Iddq','Leakage','Delay']) p.vals[par].forEach((v,i)=>document.getElementById(par+'_'+[0,24,96][i]).value=v); set96Enabled(); runScreen();}
+function set96Enabled(){const on=cutoff===96; const row=document.getElementById('row96'); row.classList.toggle('disabled',!on); row.querySelectorAll('input').forEach(x=>x.disabled=!on);}
+function runScreen(){try{const values=getValues(); const built=buildFeatures(values); const risk=classifyLive(built.X); const preds=predict168(built.X); renderResult(built,risk,preds);}catch(e){document.getElementById('riskText').textContent='INPUT ERROR';document.getElementById('riskText').className='risk MONITOR';document.getElementById('riskSub').textContent=e.message;}}
+function clearAll(){document.querySelectorAll('.measure input').forEach(x=>x.value=''); document.getElementById('component').value='NEW-COMPONENT'; document.getElementById('riskText').textContent='—'; document.getElementById('riskText').className='risk'; document.getElementById('riskSub').textContent='Enter readings and run the model.'; document.getElementById('kMaxZ').textContent='—';document.getElementById('kConf').textContent='—';document.getElementById('kWorst').textContent='—';document.getElementById('kDriver').textContent='batch signal';document.getElementById('kWorstSub').textContent='point forecast';document.getElementById('s1Flag').textContent='—';document.getElementById('s1Driver').textContent='—';document.getElementById('driverDetail').textContent='No screening run yet.'; document.getElementById('path').innerHTML='<div class="empty">The trained tree path will appear here.</div>'; document.getElementById('params').innerHTML='<div class="empty" style="grid-column:1/-1">Run a screening to see projected values.</div>'; document.getElementById('probs').innerHTML=''; document.getElementById('probExplain').innerHTML='<div class="empty" style="padding:8px 0">The leaf distribution from the deployed tree appears here after screening.</div>'; document.getElementById('chart').innerHTML=''; last=null;}
+function boot(){
+  const bs=document.getElementById('batch'); Object.keys(BATCH_STATS).forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;bs.appendChild(o)}); bs.value='B01';
+  const status=document.getElementById('modelStatus'); if(window.RELIEFOS_LIVE_MODELS && window.RELIEFOS_STAGE3_READY){status.className='status ok';status.innerHTML='<span class="dot"></span><span>trained models loaded</span>';} else {status.className='status bad';status.innerHTML='<span class="dot"></span><span>model bundle missing</span>';}
+  document.querySelectorAll('#cutoffSeg button').forEach(btn=>btn.addEventListener('click',()=>{cutoff=Number(btn.dataset.cutoff);document.querySelectorAll('#cutoffSeg button').forEach(x=>x.classList.toggle('active',x===btn));set96Enabled();}));
+  document.getElementById('run').addEventListener('click',runScreen); document.getElementById('clear').addEventListener('click',clearAll); document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));
+  document.getElementById('validation').innerHTML=Object.entries(VALIDATION).map(([k,v])=>'<div class="vcard"><div class="k">'+k+'</div><div class="v">'+v[0]+'</div><div class="s">'+v[1]+'</div></div>').join('');
+  set96Enabled(); applyPreset('normal');
+}
+window.addEventListener('load',boot);
+</script>
+</body>
+</html>
+<style id="latentx-redesign">
+:root{--bg:#07111f;--bg2:#0b1729;--panel:#0f1d31;--panel2:#13243a;--line:#203650;--text:#e8f0f8;--muted:#8ea4ba;--cyan:#54d6d0;--blue:#6da7ff;--green:#5dd39e;--amber:#f3bf55;--red:#ff6b6b}
+*{font-family:Arial,Helvetica,sans-serif!important;box-shadow:none!important}
+body{background:var(--bg)!important;color:var(--text)!important}
+.wrap{max-width:1280px;margin:0 auto;padding:38px 42px 80px}
+.topbar{margin-bottom:28px;align-items:flex-end}
+.brand{gap:16px}.brandmark{width:48px;height:48px}
+h1{font-size:34px;letter-spacing:-.025em}.subtitle{font-size:14px;max-width:760px;line-height:1.6}
+.status-row{gap:7px}.status{padding:7px 10px;font-size:11px}
+.notice{margin-bottom:26px;padding:13px 16px;line-height:1.55;font-size:12px}
+.layout{display:grid!important;grid-template-columns:1fr!important;gap:22px!important}
+.layout>.card{width:100%}
+.right{display:contents!important}
+.card{background:#0f1d31!important;border:1px solid #203650!important;border-radius:0!important;padding:24px!important}
+.card h2,.card h3{margin-top:0}
+.layout>.card:first-child{padding:28px!important}
+.hero{grid-column:1/-1;min-height:190px;padding:30px!important}
+.sections{grid-column:1/-1;display:grid!important;grid-template-columns:1fr 1fr;gap:22px}
+.right>section.card:nth-of-type(2){grid-column:1/-1}
+.right>section.card:nth-of-type(3),.right>section.card:nth-of-type(4){grid-column:span 1}
+.right>section.card:nth-of-type(5),.right>section.card:nth-of-type(6),.right>section.card:nth-of-type(7){grid-column:1/-1}
+button,.btn{border-radius:0!important;padding:10px 15px!important}
+input,select{border-radius:0!important;min-height:40px}
+input{padding:9px 11px!important}
+.section-title{margin-bottom:14px}
+.hero .result{font-size:32px!important}
+.hero .metrics{gap:12px!important}
+.metric{border-radius:0!important;background:#0b1729!important;border:1px solid #203650!important;padding:16px!important}
+.metric .value{font-size:22px!important}
+.quick{margin-top:14px!important}
+svg{max-width:100%;height:auto}
+.foot{grid-column:1/-1;margin-top:0!important;color:#6f8499!important;line-height:1.5}
+@media(max-width:900px){.wrap{padding:24px 18px 60px}.sections{grid-template-columns:1fr!important}.right>section.card:nth-of-type(3),.right>section.card:nth-of-type(4){grid-column:1/-1}}
+</style>
